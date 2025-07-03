@@ -1,8 +1,12 @@
 "use client";
 
 import React, { useState, useCallback } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
+import { useSendCalls } from 'wagmi/experimental';
 import { useNotification } from '@coinbase/onchainkit/minikit';
+import { baseSepolia } from 'wagmi/chains';
+import { encodeFunctionData, erc20Abi, parseUnits } from 'viem';
+import { heroNFTAddress, heroNFTABI, USDC_BASE_SEPOLIA, heroNFTMetadata } from '@/lib/abi/HeroNFT';
 
 interface MintTutorialProps {
   onAchievementUnlock?: (achievementId: string) => void;
@@ -10,13 +14,18 @@ interface MintTutorialProps {
 }
 
 export function MintTutorial({ onAchievementUnlock, className = "" }: MintTutorialProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
+  const { switchChain } = useSwitchChain();
   const sendNotification = useNotification();
+  const { sendCalls, data, error, isPending } = useSendCalls();
   
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
   const [mintedCount, setMintedCount] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [mintResult, setMintResult] = useState<{ success: boolean; error?: string; txHash?: string } | null>(null);
   
+  // Handle successful minting
   const handleMintSuccess = useCallback(async () => {
     const newCount = mintedCount + 1;
     setMintedCount(newCount);
@@ -24,132 +33,180 @@ export function MintTutorial({ onAchievementUnlock, className = "" }: MintTutori
     if (newCount === 1 && onAchievementUnlock) {
       onAchievementUnlock('first_nft_mint');
       await sendNotification({
-        title: "First NFT Minted! 🎨",
-        body: "You've successfully minted your first NFT on Base!"
+        title: "First Hero NFT Minted! 🎨",
+        body: "You've successfully minted your first HowToBase Hero NFT!"
       });
     }
+    
+    setMintResult({
+      success: true,
+      txHash: typeof data === 'string' ? data : 'success'
+    });
     
     // Move tutorial forward
     if (tutorialStep < tutorialSteps.length - 1) {
       setTutorialStep(tutorialStep + 1);
     }
-  }, [mintedCount, onAchievementUnlock, sendNotification, tutorialStep]);
+    
+    setIsProcessing(false);
+  }, [mintedCount, onAchievementUnlock, sendNotification, tutorialStep, data]);
+
+  // Handle minting transaction response
+  React.useEffect(() => {
+    if (data && isProcessing) {
+      console.log('NFT Mint transaction completed:', data);
+      handleMintSuccess();
+    }
+  }, [data, isProcessing, handleMintSuccess]);
+
+  // Handle minting errors
+  React.useEffect(() => {
+    if (error && isProcessing) {
+      console.error('NFT Mint error:', error);
+      setMintResult({
+        success: false,
+        error: error.message || 'Minting failed'
+      });
+      setIsProcessing(false);
+    }
+  }, [error, isProcessing]);
 
   const tutorialSteps = [
     {
       title: "Welcome to NFT Minting! 🎨",
-      content: "Learn how to mint NFTs on Base! NFTs are unique digital assets that can represent art, collectibles, game items, and more.",
+      content: "Learn how to mint your own HowToBase Hero NFT! This commemorative badge represents your journey in mastering the Base ecosystem.",
       action: "Connect your wallet to get started"
     },
     {
-      title: "Understanding NFTs 📚",
-      content: "NFTs (Non-Fungible Tokens) are unique blockchain assets. Unlike cryptocurrencies, each NFT is one-of-a-kind and cannot be replaced with another.",
-      action: "Learn about NFT standards"
+      title: "Understanding Hero NFTs 🦸",
+      content: "Hero NFTs are unique achievement badges on the Base blockchain. Each one is a proof of your learning journey and expertise.",
+      action: "Learn about the Hero collection"
     },
     {
-      title: "Mint Your First NFT! 🚀",
-      content: "Now let's mint your first NFT! We'll create a simple collectible that represents your journey learning Base.",
-      action: "Mint an NFT below"
+      title: "Mint Your Hero NFT! 🚀",
+      content: "Now let's mint your Hero NFT! You'll pay 1 USDC to create your unique achievement badge.",
+      action: "Mint your Hero NFT below"
     },
     {
-      title: "NFT Master! 🎉",
-      content: "Congratulations! You've minted your first NFT on Base. NFTs open up endless possibilities for creators and collectors.",
+      title: "NFT Hero! 🎉",
+      content: "Congratulations! You've minted your Hero NFT on Base. You're now officially a Base builder!",
       action: "Explore other Base features"
     }
   ];
   
   const currentStep = tutorialSteps[tutorialStep];
-  
-  // Demo NFT collection data
-  const demoNFTs = [
-    {
-      id: 1,
-      name: "Base Explorer",
-      description: "A badge for exploring the Base ecosystem",
-      image: "🌊",
-      rarity: "Common",
-      attributes: [
-        { trait: "Type", value: "Achievement Badge" },
-        { trait: "Level", value: "Beginner" },
-        { trait: "Network", value: "Base" }
-      ]
-    },
-    {
-      id: 2,
-      name: "Smart Wallet Pioneer",
-      description: "Commemorating your first Smart Wallet experience",
-      image: "🧠",
-      rarity: "Rare",
-      attributes: [
-        { trait: "Type", value: "Pioneer Badge" },
-        { trait: "Level", value: "Advanced" },
-        { trait: "Feature", value: "Smart Wallet" }
-      ]
-    },
-    {
-      id: 3,
-      name: "DeFi Enthusiast",
-      description: "For completing your first DeFi transaction",
-      image: "🌾",
-      rarity: "Epic",
-      attributes: [
-        { trait: "Type", value: "DeFi Badge" },
-        { trait: "Level", value: "Expert" },
-        { trait: "Protocol", value: "Base DeFi" }
-      ]
+
+  // Mint Hero NFT function
+  const mintHeroNFT = async () => {
+    if (!address || !isConnected) {
+      setMintResult({ success: false, error: "Please connect your wallet first" });
+      return;
     }
-  ];
+
+    // Check if we're on Base Sepolia
+    if (chain?.id !== baseSepolia.id) {
+      try {
+        await switchChain({ chainId: baseSepolia.id });
+      } catch (switchError) {
+        setMintResult({ 
+          success: false, 
+          error: "Please switch to Base Sepolia network" 
+        });
+        return;
+      }
+    }
+
+    try {
+      setIsProcessing(true);
+      setMintResult(null);
+
+      // Create batch transaction: approve USDC + mint NFT
+      const calls = [
+        // 1. Approve USDC spending for NFT contract
+        {
+          to: USDC_BASE_SEPOLIA,
+          data: encodeFunctionData({
+            abi: erc20Abi,
+            functionName: "approve",
+            args: [heroNFTAddress, parseUnits("1", 6)], // 1 USDC
+          }),
+        },
+        // 2. Mint the NFT
+        {
+          to: heroNFTAddress,
+          data: encodeFunctionData({
+            abi: heroNFTABI,
+            functionName: "mint",
+            args: [address],
+          }),
+        }
+      ];
+
+      sendCalls({
+        calls,
+        chainId: baseSepolia.id,
+      });
+
+    } catch (err) {
+      console.error('Minting error:', err);
+      setMintResult({
+        success: false,
+        error: err instanceof Error ? err.message : "Unknown minting error"
+      });
+      setIsProcessing(false);
+    }
+  };
 
   const nftFeatures = [
     {
-      title: "Gasless Minting",
-      description: "Mint NFTs without paying gas fees using Paymaster",
-      icon: "⛽",
-      color: "bg-blue-100 dark:bg-blue-900"
+      title: "Hero Achievement",
+      description: "Unique badge proving your Base mastery",
+      icon: "🏆",
+      color: "bg-yellow-100 dark:bg-yellow-900"
     },
     {
-      title: "Fast & Cheap",
-      description: "Base L2 provides instant and affordable NFT minting",
-      icon: "⚡",
+      title: "USDC Payment",
+      description: "Simple 1 USDC minting fee on Base Sepolia",
+      icon: "💰",
       color: "bg-green-100 dark:bg-green-900"
     },
     {
-      title: "ERC-721 Standard",
-      description: "Full compatibility with all NFT marketplaces",
+      title: "Base Native",
+      description: "Minted directly on Base L2 blockchain",
       icon: "🔗",
-      color: "bg-purple-100 dark:bg-purple-900"
+      color: "bg-blue-100 dark:bg-blue-900"
     },
     {
-      title: "Rich Metadata",
-      description: "Support for complex attributes and properties",
-      icon: "📋",
-      color: "bg-orange-100 dark:bg-orange-900"
+      title: "Permanent Badge",
+      description: "Forever proof of your learning journey",
+      icon: "🎯",
+      color: "bg-purple-100 dark:bg-purple-900"
     }
   ];
 
   const mintingProcess = [
     {
       step: 1,
-      title: "Choose Collection",
-      description: "Select or create an NFT collection contract",
-      status: "completed"
-    },
-    {
-      step: 2,
-      title: "Define Metadata",
-      description: "Set name, description, image, and attributes",
+      title: "Connect Wallet",
+      description: "Connect your Smart Wallet to Base Sepolia",
       status: isConnected ? "completed" : "pending"
     },
     {
+      step: 2,
+      title: "Approve USDC",
+      description: "Allow the contract to spend 1 USDC",
+      status: mintedCount > 0 ? "completed" : "pending"
+    },
+    {
       step: 3,
-      title: "Sign Transaction",
-      description: "Approve the minting transaction with your wallet",
+      title: "Mint NFT",
+      description: "Create your unique Hero achievement badge",
       status: mintedCount > 0 ? "completed" : "pending"
     },
     {
       step: 4,
-      title: "NFT Created",
-      description: "Your unique NFT is now on the blockchain",
+      title: "Hero Created!",
+      description: "Your Hero NFT is now on the blockchain",
       status: mintedCount > 0 ? "completed" : "pending"
     }
   ];
@@ -158,79 +215,159 @@ export function MintTutorial({ onAchievementUnlock, className = "" }: MintTutori
     <div className={`space-y-6 ${className}`}>
       {/* Tutorial Progress */}
       {showTutorial && (
-        <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-6 border border-[var(--app-card-border)]">
+        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-md rounded-xl p-6 border border-purple-500/30">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-[var(--app-foreground)]">
-              NFT Minting Tutorial
-            </h3>
+            <h2 className="text-xl font-bold text-white">
+              Step {tutorialStep + 1} of {tutorialSteps.length}
+            </h2>
             <button
               onClick={() => setShowTutorial(false)}
-              className="text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] transition-colors"
+              className="text-purple-300 hover:text-white"
             >
-              ✕
+              Skip Tutorial
             </button>
           </div>
           
-          {/* Progress Bar */}
-          <div className="w-full bg-[var(--app-gray)] rounded-full h-2 mb-4">
-            <div 
-              className="bg-gradient-to-r from-[var(--app-accent)] to-[var(--app-accent-hover)] h-2 rounded-full transition-all duration-500"
-              style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}
-            />
-          </div>
-          
-          <div className="space-y-3">
-            <h4 className="font-semibold text-[var(--app-foreground)]">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">
               {currentStep.title}
-            </h4>
-            <p className="text-[var(--app-foreground-muted)]">
+            </h3>
+            <p className="text-purple-200">
               {currentStep.content}
             </p>
-            <div className="text-sm font-medium text-[var(--app-accent)]">
-              👉 {currentStep.action}
-            </div>
-          </div>
-          
-          <div className="text-xs text-[var(--app-foreground-muted)] mt-4">
-            Step {tutorialStep + 1} of {tutorialSteps.length}
+            
+            {tutorialStep < tutorialSteps.length - 1 && (
+              <button
+                onClick={() => setTutorialStep(tutorialStep + 1)}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                {currentStep.action}
+              </button>
+            )}
           </div>
         </div>
       )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
-          <div className="text-2xl font-bold text-[var(--app-accent)]">{mintedCount}</div>
-          <div className="text-sm text-[var(--app-foreground-muted)]">NFTs Minted</div>
+        <div className="bg-black/20 backdrop-blur-lg rounded-xl p-4 border border-blue-500/30">
+          <div className="text-2xl font-bold text-cyan-400">{mintedCount}</div>
+          <div className="text-sm text-blue-200">Hero NFTs Minted</div>
         </div>
-        <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
-          <div className="text-2xl font-bold text-[var(--app-accent)]">3</div>
-          <div className="text-sm text-[var(--app-foreground-muted)]">Collections</div>
+        <div className="bg-black/20 backdrop-blur-lg rounded-xl p-4 border border-blue-500/30">
+          <div className="text-2xl font-bold text-cyan-400">1 USDC</div>
+          <div className="text-sm text-blue-200">Minting Price</div>
         </div>
-        <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-4 border border-[var(--app-card-border)]">
-          <div className="text-2xl font-bold text-[var(--app-accent)]">Free</div>
-          <div className="text-sm text-[var(--app-foreground-muted)]">Gas Fees</div>
+        <div className="bg-black/20 backdrop-blur-lg rounded-xl p-4 border border-blue-500/30">
+          <div className="text-2xl font-bold text-cyan-400">Base</div>
+          <div className="text-sm text-blue-200">Network</div>
+        </div>
+      </div>
+
+      {/* Hero NFT Preview */}
+      <div className="bg-black/20 backdrop-blur-lg rounded-xl p-6 border border-blue-500/30">
+        <h3 className="text-xl font-bold text-white mb-4">
+          🦸 HowToBase Hero NFT
+        </h3>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* NFT Preview */}
+          <div className="bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-xl p-6 border border-yellow-400/30">
+            <div className="text-center">
+              <div className="text-8xl mb-4">🦸</div>
+              <h4 className="text-xl font-bold text-white mb-2">
+                {heroNFTMetadata.name}
+              </h4>
+              <p className="text-blue-200 text-sm mb-4">
+                {heroNFTMetadata.description}
+              </p>
+              
+              {/* Attributes */}
+              <div className="space-y-2">
+                {heroNFTMetadata.attributes.map((attr, i) => (
+                  <div key={i} className="flex justify-between text-xs bg-black/20 rounded p-2">
+                    <span className="text-blue-300">{attr.trait_type}:</span>
+                    <span className="text-white font-semibold">{attr.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Minting Interface */}
+          <div className="space-y-4">
+            <div className="bg-black/20 rounded-lg p-4">
+              <h5 className="font-semibold text-white mb-2">Requirements:</h5>
+              <ul className="space-y-1 text-sm text-blue-200">
+                <li>✓ Connect Smart Wallet</li>
+                <li>✓ Switch to Base Sepolia</li>
+                <li>✓ Have 1 USDC for minting</li>
+                <li>✓ Complete HowToBase Academy</li>
+              </ul>
+            </div>
+
+            {isConnected ? (
+              <div className="space-y-4">
+                <button
+                  onClick={mintHeroNFT}
+                  disabled={isProcessing || isPending}
+                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 disabled:from-gray-500 disabled:to-gray-600 text-white py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
+                >
+                  {isProcessing || isPending ? "🔄 Minting Hero NFT..." : "🦸 Mint Hero NFT (1 USDC)"}
+                </button>
+
+                {/* Mint Result */}
+                {mintResult && (
+                  <div className={`p-4 rounded-lg ${mintResult.success ? 'bg-green-500/20 border border-green-500/30' : 'bg-red-500/20 border border-red-500/30'}`}>
+                    {mintResult.success ? (
+                      <div>
+                        <h4 className="font-semibold text-green-400 mb-2">🎉 Hero NFT Minted!</h4>
+                        <p className="text-green-300 text-sm">
+                          Your HowToBase Hero badge has been successfully created!
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <h4 className="font-semibold text-red-400 mb-2">❌ Minting Failed</h4>
+                        <p className="text-red-300 text-sm">{mintResult.error}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">🔌</div>
+                <h4 className="text-lg font-semibold text-white mb-2">
+                  Connect Your Wallet
+                </h4>
+                <p className="text-blue-200">
+                  Connect your Smart Wallet to mint your Hero NFT
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* NFT Features */}
-      <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-6 border border-[var(--app-card-border)]">
-        <h3 className="text-xl font-bold text-[var(--app-foreground)] mb-4">
-          🎨 Why Mint NFTs on Base?
+      <div className="bg-black/20 backdrop-blur-lg rounded-xl p-6 border border-blue-500/30">
+        <h3 className="text-xl font-bold text-white mb-4">
+          🎨 Why Mint Hero NFTs?
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {nftFeatures.map((feature, index) => (
             <div
               key={index}
-              className={`p-4 rounded-lg ${feature.color}`}
+              className="p-4 rounded-lg bg-black/20 border border-blue-500/20"
             >
               <div className="flex items-center space-x-3 mb-2">
                 <span className="text-2xl">{feature.icon}</span>
-                <h4 className="font-semibold text-[var(--app-foreground)]">
+                <h4 className="font-semibold text-white">
                   {feature.title}
                 </h4>
               </div>
-              <p className="text-sm text-[var(--app-foreground-muted)]">
+              <p className="text-sm text-blue-200">
                 {feature.description}
               </p>
             </div>
@@ -238,72 +375,9 @@ export function MintTutorial({ onAchievementUnlock, className = "" }: MintTutori
         </div>
       </div>
 
-      {/* Minting Demo */}
-      <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-6 border border-[var(--app-card-border)]">
-        <h3 className="text-xl font-bold text-[var(--app-foreground)] mb-4">
-          🚀 Mint Demo NFTs
-        </h3>
-        
-        {isConnected ? (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {demoNFTs.map((nft) => (
-                <div
-                  key={nft.id}
-                  className="p-4 bg-[var(--app-gray)] rounded-lg hover:bg-[var(--app-card-border)] transition-colors"
-                >
-                  <div className="text-center mb-3">
-                    <div className="text-6xl mb-2">{nft.image}</div>
-                    <h4 className="font-semibold text-[var(--app-foreground)]">
-                      {nft.name}
-                    </h4>
-                    <p className="text-sm text-[var(--app-foreground-muted)] mb-2">
-                      {nft.description}
-                    </p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      nft.rarity === 'Common' ? 'bg-gray-200 text-gray-800' :
-                      nft.rarity === 'Rare' ? 'bg-blue-200 text-blue-800' :
-                      'bg-purple-200 text-purple-800'
-                    }`}>
-                      {nft.rarity}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-2 mb-4">
-                    {nft.attributes.map((attr, i) => (
-                      <div key={i} className="flex justify-between text-xs">
-                        <span className="text-[var(--app-foreground-muted)]">{attr.trait}:</span>
-                        <span className="text-[var(--app-foreground)]">{attr.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <button
-                    onClick={handleMintSuccess}
-                    className="w-full px-4 py-2 bg-[var(--app-accent)] text-white rounded-lg hover:bg-[var(--app-accent-hover)] transition-colors"
-                  >
-                    Mint NFT
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="text-6xl mb-4">🔌</div>
-            <h4 className="text-lg font-semibold text-[var(--app-foreground)] mb-2">
-              Connect Your Wallet
-            </h4>
-            <p className="text-[var(--app-foreground-muted)]">
-              Connect your wallet to start minting NFTs
-            </p>
-          </div>
-        )}
-      </div>
-
       {/* Minting Process */}
-      <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-6 border border-[var(--app-card-border)]">
-        <h3 className="text-xl font-bold text-[var(--app-foreground)] mb-4">
+      <div className="bg-black/20 backdrop-blur-lg rounded-xl p-6 border border-blue-500/30">
+        <h3 className="text-xl font-bold text-white mb-4">
           🛠️ NFT Minting Process
         </h3>
         <div className="space-y-4">
@@ -312,13 +386,13 @@ export function MintTutorial({ onAchievementUnlock, className = "" }: MintTutori
               <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${
                 item.status === 'completed' 
                   ? 'bg-green-500 text-white' 
-                  : 'bg-[var(--app-gray)] text-[var(--app-foreground-muted)]'
+                  : 'bg-gray-600 text-gray-300'
               }`}>
                 {item.status === 'completed' ? '✓' : item.step}
               </div>
               <div>
-                <h4 className="font-medium text-[var(--app-foreground)]">{item.title}</h4>
-                <p className="text-sm text-[var(--app-foreground-muted)]">
+                <h4 className="font-medium text-white">{item.title}</h4>
+                <p className="text-sm text-blue-200">
                   {item.description}
                 </p>
               </div>
@@ -328,26 +402,26 @@ export function MintTutorial({ onAchievementUnlock, className = "" }: MintTutori
       </div>
 
       {/* Pro Tips */}
-      <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-6 border border-[var(--app-card-border)]">
-        <h4 className="font-semibold text-[var(--app-foreground)] mb-3">
-          💡 NFT Pro Tips
+      <div className="bg-black/20 backdrop-blur-lg rounded-xl p-6 border border-blue-500/30">
+        <h4 className="font-semibold text-white mb-3">
+          💡 Hero NFT Pro Tips
         </h4>
-        <ul className="space-y-2 text-sm text-[var(--app-foreground-muted)]">
+        <ul className="space-y-2 text-sm text-blue-200">
           <li className="flex items-center space-x-2">
-            <span className="text-green-500">✓</span>
-            <span>Use IPFS for storing NFT metadata and images permanently</span>
+            <span className="text-green-400">✓</span>
+            <span>Hero NFTs are permanent proof of your Base mastery</span>
           </li>
           <li className="flex items-center space-x-2">
-            <span className="text-green-500">✓</span>
-            <span>Consider royalties for ongoing creator compensation</span>
+            <span className="text-green-400">✓</span>
+            <span>Each NFT is unique with your wallet address embedded</span>
           </li>
           <li className="flex items-center space-x-2">
-            <span className="text-green-500">✓</span>
-            <span>Base L2 makes NFT minting accessible to everyone</span>
+            <span className="text-green-400">✓</span>
+            <span>Built on Base L2 for fast and cheap transactions</span>
           </li>
           <li className="flex items-center space-x-2">
-            <span className="text-green-500">✓</span>
-            <span>Combine with Spend Permissions for subscription NFTs</span>
+            <span className="text-green-400">✓</span>
+            <span>Show off your Hero badge in your NFT collection</span>
           </li>
         </ul>
       </div>

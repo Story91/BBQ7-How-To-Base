@@ -84,35 +84,35 @@ export function HowToBaseAcademy({ className = "", setActiveTab, onBack }: HowTo
   ];
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-[var(--app-bg)] to-[var(--app-bg-alternate)] ${className}`}>
-      {/* Header */}
-      <div className="bg-[var(--app-card-bg)] backdrop-blur-md border-b border-[var(--app-card-border)] sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="text-2xl">🎓</div>
-              <div>
-                <h1 className="text-2xl font-bold text-[var(--app-foreground)]">
-                  HowToBase Academy
-                </h1>
-                <p className="text-[var(--app-foreground-muted)]">
-                  Learn Base builder tools through interactive tutorials
-                </p>
+    <div className={`min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black ${className}`}>
+              {/* Header */}
+        <div className="bg-black/30 backdrop-blur-lg border-b border-blue-500/30 sticky top-0 z-10">
+          <div className="max-w-6xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">🎓</div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white">
+                    HowToBase Academy
+                  </h1>
+                  <p className="text-blue-200">
+                    Learn Base builder tools through interactive tutorials
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              {setActiveTab && (
+                          <div className="flex items-center space-x-4">
+              {(setActiveTab || onBack) && (
                 <button
-                  onClick={() => setActiveTab?.("home")}
-                  className="text-sm text-[var(--app-foreground-muted)] hover:text-[var(--app-foreground)] transition-colors"
+                  onClick={() => onBack ? onBack() : setActiveTab?.("home")}
+                  className="text-sm text-blue-300 hover:text-white transition-colors"
                 >
                   ← Back to Home
                 </button>
               )}
-              <div className="text-sm text-[var(--app-foreground-muted)]">
+              <div className="text-sm text-blue-300">
                 Powered by OnchainKit
               </div>
-              <div className="px-3 py-1 bg-[var(--app-accent)] text-white text-sm rounded-full">
+              <div className="px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm rounded-full">
                 Beta
               </div>
             </div>
@@ -122,20 +122,19 @@ export function HowToBaseAcademy({ className = "", setActiveTab, onBack }: HowTo
 
       {/* Navigation Tabs */}
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex space-x-2 overflow-x-auto pb-2 mb-8">
+        <div className="flex space-x-3 overflow-x-auto pb-2 mb-8 justify-center">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTutorialTab(tab.id)}
-              className={`flex flex-col items-center space-y-1 px-4 py-3 rounded-xl whitespace-nowrap transition-all min-w-[100px] ${
+              className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all min-w-[80px] h-[80px] ${
                 activeTutorialTab === tab.id
-                  ? 'bg-[var(--app-accent)] text-white shadow-lg scale-105'
-                  : 'bg-[var(--app-card-bg)] text-[var(--app-foreground)] hover:bg-[var(--app-gray)] hover:scale-102'
+                  ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-2xl scale-110 shadow-blue-500/30'
+                  : 'bg-black/20 backdrop-blur-lg text-blue-200 hover:bg-black/30 hover:scale-105 border border-blue-500/20'
               }`}
+              title={`${tab.name} - ${tab.description}`}
             >
-              <span className="text-2xl">{tab.icon}</span>
-              <span className="text-sm font-medium">{tab.name}</span>
-              <span className="text-xs opacity-75">{tab.description}</span>
+              <span className="text-3xl">{tab.icon}</span>
             </button>
           ))}
         </div>
