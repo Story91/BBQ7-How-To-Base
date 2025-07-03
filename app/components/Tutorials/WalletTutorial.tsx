@@ -269,7 +269,7 @@ export function WalletTutorial({ onAchievementUnlock, className = "" }: WalletTu
             </h3>
           </div>
           <p className="text-blue-700 dark:text-blue-300 mb-4">
-            Sub Accounts and Spend Permissions are available on Base Sepolia testnet. You're currently on {chainId === base.id ? 'Base Mainnet' : 'another network'}.
+            Sub Accounts and Spend Permissions are available on Base Sepolia testnet. You&apos;re currently on {chainId === base.id ? 'Base Mainnet' : 'another network'}.
           </p>
           <button
             onClick={handleSwitchToSepolia}

@@ -99,7 +99,7 @@ export function SwapTutorial({ onAchievementUnlock, className = "" }: SwapTutori
       onAchievementUnlock('swap_expert');
       await sendNotification({
         title: "Swap Expert! 🏆",
-        body: "You've completed 5 swaps and become a trading expert!"
+        body: "You&apos;ve completed 5 swaps and become a trading expert!"
       });
     }
     
@@ -156,7 +156,7 @@ export function SwapTutorial({ onAchievementUnlock, className = "" }: SwapTutori
             </h3>
           </div>
           <p className="text-yellow-700 dark:text-yellow-300 mb-4">
-            OnchainKit Swap only works on Base Mainnet. You're currently on {chainId === baseSepolia.id ? 'Base Sepolia' : 'another network'}.
+            OnchainKit Swap only works on Base Mainnet. You&apos;re currently on {chainId === baseSepolia.id ? 'Base Sepolia' : 'another network'}.
           </p>
           <button
             onClick={handleSwitchToMainnet}

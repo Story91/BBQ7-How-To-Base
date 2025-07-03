@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from 'react';
-import { useAccount, useEnsName, useEnsAvatar } from 'wagmi';
+import { useAccount, useEnsName } from 'wagmi';
 import { useNotification } from '@coinbase/onchainkit/minikit';
 import { Identity, Avatar, Name, Badge } from '@coinbase/onchainkit/identity';
 import { baseSepolia } from 'wagmi/chains';
@@ -216,7 +216,7 @@ export function BasenamesTutorial({ onAchievementUnlock, className = "" }: Basen
           {!ensName && (
             <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                💡 You don't have a Basename yet! Register one below to get your human-readable identity.
+                💡 You don&apos;t have a Basename yet! Register one below to get your human-readable identity.
               </p>
             </div>
           )}

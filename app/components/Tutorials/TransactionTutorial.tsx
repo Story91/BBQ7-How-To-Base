@@ -92,7 +92,7 @@ export function TransactionTutorial({ onAchievementUnlock, className = "" }: Tra
     },
     {
       title: "Sponsored Transactions ⛽",
-      content: "Amazing! That transaction was sponsored by Paymaster - you didn't pay any gas fees. This makes Base extremely user-friendly.",
+      content: "Amazing! That transaction was sponsored by Paymaster - you didn&apos;t pay any gas fees. This makes Base extremely user-friendly.",
       action: "Try an increment transaction next"
     },
     {
@@ -252,7 +252,7 @@ export function TransactionTutorial({ onAchievementUnlock, className = "" }: Tra
         </h4>
         <div className="space-y-4">
           <p className="text-[var(--app-foreground-muted)]">
-            Paymaster makes transactions on Base completely gas-free for users. Here's how it works:
+            Paymaster makes transactions on Base completely gas-free for users. Here&apos;s how it works:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-[var(--app-gray)] rounded-lg">

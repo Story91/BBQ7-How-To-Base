@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { useNotification } from '@coinbase/onchainkit/minikit';
 import { 
@@ -37,7 +37,7 @@ export function AchievementSystem({ className = "" }: AchievementSystemProps) {
   const categorizedAchievements = getAchievementsByCategory(selectedCategory);
   
   // Handle achievement completion
-  const handleAchievementComplete = async (achievementId: string) => {
+  const handleAchievementComplete = useCallback(async (achievementId: string) => {
     const completedAchievement = completeAchievement(achievementId);
     if (completedAchievement) {
       const newProgress = {
@@ -54,7 +54,7 @@ export function AchievementSystem({ className = "" }: AchievementSystemProps) {
         body: `${completedAchievement.icon} ${completedAchievement.title} (+${completedAchievement.xp} XP)`
       });
     }
-  };
+  }, [userProgress, sendNotification]);
   
   // Auto-complete wallet connection achievement
   useEffect(() => {

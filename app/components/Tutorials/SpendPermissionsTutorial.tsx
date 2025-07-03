@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { useNotification } from '@coinbase/onchainkit/minikit';
 import Subscribe from '../Subscribe';
 
 interface SpendPermissionsTutorialProps {
@@ -12,10 +11,15 @@ interface SpendPermissionsTutorialProps {
 
 export function SpendPermissionsTutorial({ onAchievementUnlock, className = "" }: SpendPermissionsTutorialProps) {
   const { isConnected } = useAccount();
-  const sendNotification = useNotification();
   
-  const [tutorialStep, setTutorialStep] = useState(0);
+  const [tutorialStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
+
+  useEffect(() => {
+    if (isConnected && onAchievementUnlock) {
+      onAchievementUnlock('connected_for_permissions');
+    }
+  }, [isConnected, onAchievementUnlock]);
 
   const tutorialSteps = [
     {
@@ -173,7 +177,7 @@ export function SpendPermissionsTutorial({ onAchievementUnlock, className = "" }
             Connect your Smart Wallet to try spend permissions
           </p>
           <div className="text-sm text-[var(--app-foreground-muted)]">
-            Make sure you're using a Smart Wallet for the best experience
+            Make sure you&apos;re using a Smart Wallet for the best experience
           </div>
         </div>
       )}
