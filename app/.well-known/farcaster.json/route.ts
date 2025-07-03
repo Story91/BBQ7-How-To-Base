@@ -12,7 +12,8 @@ function withValidProperties(
 }
 
 export async function GET() {
-  const URL = process.env.NEXT_PUBLIC_URL;
+  // Use deployed URL as fallback
+  const URL = "https://how-to-base.vercel.app";
 
   return Response.json({
     accountAssociation: {
@@ -23,14 +24,24 @@ export async function GET() {
     frame: {
       version: "1",
       name: "HowToBase Academy",
-      iconUrl: "https://how-to-base.vercel.app/icon.png",
-      splashImageUrl: "https://how-to-base.vercel.app/splash.png",
+      iconUrl: `${URL}/icon.png`,
+      imageUrl: `${URL}/hero.png`,
+      buttonTitle: "Launch Academy",
+      splashImageUrl: `${URL}/splash.png`,
       splashBackgroundColor: "#000000",
-      homeUrl: "https://how-to-base.vercel.app/",
-      webhookUrl: "https://how-to-base.vercel.app/api/webhook",
-      heroImageUrl: "https://how-to-base.vercel.app/hero.png",
-      ogTitle: "HowToBase",
-      ogImageUrl: "https://how-to-base.vercel.app/hero.png"
+      homeUrl: `${URL}/`,
+      webhookUrl: `${URL}/api/webhook`,
+      heroImageUrl: `${URL}/hero.png`,
+      subtitle: "Master Base Blockchain Development",
+      description: "Interactive learning platform for Base ecosystem with hands-on tutorials covering OnchainKit, Paymaster, Spend Permissions, and more. Build your crypto skills through gamified experiences.",
+      screenshotUrls: [`${URL}/screenshot.png`],
+      primaryCategory: "developer-tools",
+      tags: ["base", "blockchain", "education", "onchainkit", "web3", "defi", "tutorials"],
+      tagline: "Learn Base. Build Better. 🚀",
+      ogTitle: "HowToBase Academy",
+      ogDescription: "Master Base blockchain development through interactive tutorials and hands-on learning",
+      ogImageUrl: `${URL}/hero.png`,
+      castShareUrl: `${URL}/`
     }
   });
 }
