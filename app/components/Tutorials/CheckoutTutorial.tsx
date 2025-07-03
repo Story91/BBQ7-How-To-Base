@@ -4,20 +4,32 @@ import React, { useState, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { useNotification } from '@coinbase/onchainkit/minikit';
 
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  image: string;
+  category: string;
+  features: string[];
+  popular: boolean;
+}
+
 interface CheckoutTutorialProps {
   onAchievementUnlock?: (achievementId: string) => void;
   className?: string;
 }
 
 export function CheckoutTutorial({ onAchievementUnlock, className = "" }: CheckoutTutorialProps) {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const sendNotification = useNotification();
   
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
   const [purchaseCount, setPurchaseCount] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
-  const [cart, setCart] = useState<any[]>([]);
+  const [cart, setCart] = useState<Product[]>([]);
 
   const handlePurchaseSuccess = useCallback(async () => {
     const newCount = purchaseCount + 1;
@@ -194,7 +206,7 @@ export function CheckoutTutorial({ onAchievementUnlock, className = "" }: Checko
     }
   ];
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: Product) => {
     setCart([...cart, product]);
     setSelectedProduct(product.id);
   };

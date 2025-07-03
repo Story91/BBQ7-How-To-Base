@@ -4,14 +4,14 @@ import { baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { spendPermissionManagerAddress, spendPermissionManagerABI } from "@/lib/abi/SpendPermissionManager";
 
-// API endpoint to collect subscription payment using spend permission
+// API endpoint to approve spend permission on-chain
 export async function POST(request: NextRequest) {
   try {
-    const { spendPermission, signature, amount } = await request.json();
+    const { spendPermission, signature } = await request.json();
 
-    if (!spendPermission || !signature || !amount) {
+    if (!spendPermission || !signature) {
       return NextResponse.json(
-        { error: "Missing required parameters: spendPermission, signature, or amount" },
+        { error: "Missing spendPermission or signature" },
         { status: 400 }
       );
     }
@@ -38,14 +38,14 @@ export async function POST(request: NextRequest) {
       transport: http(),
     });
 
-    // Execute spend using the spend permission
+    // Approve the spend permission on-chain
     const hash = await walletClient.writeContract({
       address: spendPermissionManagerAddress,
       abi: spendPermissionManagerABI,
-      functionName: "spend",
+      functionName: "approve",
       args: [
         spendPermission,
-        BigInt(amount), // Amount to spend (in USDC wei, 6 decimals)
+        signature,
       ],
     });
 
@@ -57,15 +57,13 @@ export async function POST(request: NextRequest) {
       transactionHash: hash,
       blockNumber: receipt.blockNumber,
       gasUsed: receipt.gasUsed,
-      amountCollected: amount,
-      message: "Subscription payment collected successfully"
     });
 
   } catch (error) {
-    console.error("Error collecting subscription:", error);
+    console.error("Error approving spend permission:", error);
     return NextResponse.json(
       { 
-        error: "Failed to collect subscription payment", 
+        error: "Failed to approve spend permission", 
         details: error instanceof Error ? error.message : "Unknown error" 
       },
       { status: 500 }

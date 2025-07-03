@@ -16,7 +16,6 @@ import {
 } from '@coinbase/onchainkit/transaction';
 import type { TransactionError, LifecycleStatus } from '@coinbase/onchainkit/transaction';
 import { useNotification } from '@coinbase/onchainkit/minikit';
-import { base } from 'viem/chains';
 import { demoContractCalls } from '@/lib/abi/DemoContract';
 
 interface TransactionTutorialProps {
@@ -56,7 +55,7 @@ export function TransactionTutorial({ onAchievementUnlock, className = "" }: Tra
       onAchievementUnlock('first_transaction');
       await sendNotification({
         title: "First Transaction! 💸",
-        body: "You've successfully sent your first transaction on Base!"
+        body: "You&apos;ve successfully sent your first transaction on Base!"
       });
     }
     
@@ -98,7 +97,7 @@ export function TransactionTutorial({ onAchievementUnlock, className = "" }: Tra
     },
     {
       title: "Transaction Master! 🎉",
-      content: "You've mastered Base transactions! You can now send gas-free transactions efficiently using Paymaster.",
+      content: "You&apos;ve mastered Base transactions! You can now send gas-free transactions efficiently using Paymaster.",
       action: "Continue to other tutorials"
     }
   ];

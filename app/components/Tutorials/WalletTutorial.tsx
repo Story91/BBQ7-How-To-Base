@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAccount, useDisconnect, useAccountEffect, useSwitchChain } from 'wagmi';
 import { 
   ConnectWallet,
@@ -17,7 +17,6 @@ import {
 } from '@coinbase/onchainkit/identity';
 import { useNotification } from '@coinbase/onchainkit/minikit';
 import { base, baseSepolia } from 'viem/chains';
-import { parseEther } from 'viem';
 
 interface WalletTutorialProps {
   onAchievementUnlock?: (achievementId: string) => void;
@@ -77,7 +76,7 @@ export function WalletTutorial({ onAchievementUnlock, className = "" }: WalletTu
           onAchievementUnlock('smart_wallet_created');
           await sendNotification({
             title: "Smart Wallet Connected! 🧠",
-            body: "You're now using a Coinbase Smart Wallet with advanced features!"
+            body: "You&apos;re now using a Coinbase Smart Wallet with advanced features!"
           });
         } else {
           await sendNotification({
@@ -178,7 +177,7 @@ export function WalletTutorial({ onAchievementUnlock, className = "" }: WalletTu
         onAchievementUnlock('spend_permission');
         await sendNotification({
           title: "Spend Permission Set! 🔐",
-          body: "Go to 'Spend Permissions' tutorial for full implementation!"
+          body: "Go to &apos;Spend Permissions&apos; tutorial for full implementation!"
         });
       }
       
@@ -224,7 +223,7 @@ export function WalletTutorial({ onAchievementUnlock, className = "" }: WalletTu
     },
     {
       title: "Master of Smart Wallets! 🎉",
-      content: "You've mastered Smart Wallet features! You can now enjoy gasless transactions, organize funds with sub-accounts, and automate payments safely.",
+      content: "You&apos;ve mastered Smart Wallet features! You can now enjoy gasless transactions, organize funds with sub-accounts, and automate payments safely.",
       action: "Continue exploring other Base features"
     }
   ];
@@ -292,7 +291,7 @@ export function WalletTutorial({ onAchievementUnlock, className = "" }: WalletTu
             </h3>
           </div>
           <p className="text-orange-700 dark:text-orange-300 mb-4">
-            You're using a regular wallet. Sub Accounts and Spend Permissions require Coinbase Smart Wallet.
+            You&apos;re using a regular wallet. Sub Accounts and Spend Permissions require Coinbase Smart Wallet.
           </p>
           <button
             onClick={() => disconnect()}

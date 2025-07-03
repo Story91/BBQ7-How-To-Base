@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import {
   useMiniKit,
-  useAddFrame,
 } from "@coinbase/onchainkit/minikit";
 import {
   Name,

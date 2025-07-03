@@ -90,7 +90,7 @@ export function SwapTutorial({ onAchievementUnlock, className = "" }: SwapTutori
       onAchievementUnlock('first_swap');
       await sendNotification({
         title: "First Swap Complete! 🎉",
-        body: "You've successfully completed your first token swap on Base!"
+        body: "You&apos;ve successfully completed your first token swap on Base!"
       });
     }
     

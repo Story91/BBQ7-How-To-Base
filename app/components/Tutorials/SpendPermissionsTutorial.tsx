@@ -11,30 +11,11 @@ interface SpendPermissionsTutorialProps {
 }
 
 export function SpendPermissionsTutorial({ onAchievementUnlock, className = "" }: SpendPermissionsTutorialProps) {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const sendNotification = useNotification();
   
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
-  const [permissionsCreated, setPermissionsCreated] = useState(0);
-  
-  const handlePermissionCreated = useCallback(async () => {
-    const newCount = permissionsCreated + 1;
-    setPermissionsCreated(newCount);
-    
-    if (newCount === 1 && onAchievementUnlock) {
-      onAchievementUnlock('spend_permission');
-      await sendNotification({
-        title: "Spend Permission Achievement! 🔐",
-        body: "You've mastered spend permissions - the future of seamless transactions!"
-      });
-    }
-    
-    // Move tutorial forward
-    if (tutorialStep < tutorialSteps.length - 1) {
-      setTutorialStep(tutorialStep + 1);
-    }
-  }, [permissionsCreated, onAchievementUnlock, sendNotification, tutorialStep]);
 
   const tutorialSteps = [
     {
@@ -64,7 +45,7 @@ export function SpendPermissionsTutorial({ onAchievementUnlock, className = "" }
   const benefits = [
     {
       title: "No More Popups",
-      description: "Users don't need to confirm every transaction",
+      description: "Users don&apos;t need to confirm every transaction",
       icon: "🚫",
       color: "bg-red-100 dark:bg-red-900"
     },

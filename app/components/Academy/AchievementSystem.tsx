@@ -28,7 +28,6 @@ export function AchievementSystem({ className = "" }: AchievementSystemProps) {
     longestStreak: 0
   });
   
-  const [achievements, setAchievements] = useState<Achievement[]>(ACHIEVEMENTS);
   const [selectedCategory, setSelectedCategory] = useState<Achievement['category']>('wallet');
   
   // Calculate current level info
@@ -48,7 +47,6 @@ export function AchievementSystem({ className = "" }: AchievementSystemProps) {
       };
       
       setUserProgress(newProgress);
-      setAchievements([...ACHIEVEMENTS]);
       
       // Send notification for achievement unlock
       await sendNotification({
@@ -63,7 +61,7 @@ export function AchievementSystem({ className = "" }: AchievementSystemProps) {
     if (address && !userProgress.completedAchievements.includes('wallet_connected')) {
       handleAchievementComplete('wallet_connected');
     }
-  }, [address]);
+  }, [address, handleAchievementComplete, userProgress.completedAchievements]);
   
   const categories = [
     { id: 'wallet', name: 'Wallet', icon: '🔌' },

@@ -107,7 +107,7 @@ export function MintTutorial({ onAchievementUnlock, className = "" }: MintTutori
     if (chain?.id !== baseSepolia.id) {
       try {
         await switchChain({ chainId: baseSepolia.id });
-      } catch (switchError) {
+      } catch {
         setMintResult({ 
           success: false, 
           error: "Please switch to Base Sepolia network" 

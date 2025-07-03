@@ -17,16 +17,10 @@ export function BasenamesTutorial({ onAchievementUnlock, className = "" }: Basen
   
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showTutorial, setShowTutorial] = useState(true);
-  const [searchAddress, setSearchAddress] = useState('');
   const [registrationStep, setRegistrationStep] = useState(0);
   
   const { data: ensName } = useEnsName({
     address: address as `0x${string}`,
-    chainId: baseSepolia.id,
-  });
-  
-  const { data: ensAvatar } = useEnsAvatar({
-    name: ensName || undefined,
     chainId: baseSepolia.id,
   });
 
@@ -35,7 +29,7 @@ export function BasenamesTutorial({ onAchievementUnlock, className = "" }: Basen
       onAchievementUnlock('basename_registered');
       await sendNotification({
         title: "Basename Registered! 🎯",
-        body: "You've successfully registered your first Basename on Base!"
+        body: "You&apos;ve successfully registered your first Basename on Base!"
       });
     }
     

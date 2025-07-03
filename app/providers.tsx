@@ -22,7 +22,7 @@ const wagmiConfig = createConfig({
       appName: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "HowToBase Academy",
       preference: "smartWalletOnly", // Force Smart Wallet for Sub Accounts & Spend Permissions
       version: "4",
-      // @ts-ignore - Required for Sub Accounts on testnet
+      // @ts-expect-error - Required for Sub Accounts on testnet
       keysUrl: "https://keys-dev.coinbase.com/connect", // Sub Accounts dev environment
     }),
     walletConnect({

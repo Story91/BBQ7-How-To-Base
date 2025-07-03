@@ -16,10 +16,24 @@ export async function GET() {
 
   return Response.json({
     accountAssociation: {
-      header: process.env.FARCASTER_HEADER,
-      payload: process.env.FARCASTER_PAYLOAD,
-      signature: process.env.FARCASTER_SIGNATURE,
-    },
+      "accountAssociation": {
+        "header": "",
+        "payload": "",
+        "signature": ""
+      },
+      "frame": {
+        "version": "1",
+        "name": "HowToBase Academy",
+        "iconUrl": "https://how-to-base.vercel.app//icon.png",
+        "splashImageUrl": "https://how-to-base.vercel.app//splash.png",
+        "splashBackgroundColor": "#000000",
+        "homeUrl": "https://how-to-base.vercel.app/",
+        "webhookUrl": "https://how-to-base.vercel.app//api/webhook",
+        "heroImageUrl": "https://how-to-base.vercel.app//hero.png",
+        "ogTitle": "HowToBase",
+        "ogImageUrl": "https://how-to-base.vercel.app//hero.png"
+      }
+    }
     frame: withValidProperties({
       version: "1",
       name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
