@@ -43,36 +43,37 @@ export function TransactionTutorial({ onAchievementUnlock, className = "" }: Tra
   ] : [], [address]);
 
   const handleTransactionSuccess = useCallback(async (isSponsored: boolean) => {
-    const newTransactionCount = transactionCount + 1;
-    setTransactionCount(newTransactionCount);
+    setTransactionCount(prev => {
+      const newCount = prev + 1;
+      // First transaction achievement
+      if (newCount === 1 && onAchievementUnlock) {
+        onAchievementUnlock('first_transaction');
+        sendNotification({
+          title: "First Transaction! 💸",
+          body: "You've successfully sent your first transaction on Base!"
+        });
+      }
+      return newCount;
+    });
     
     if (isSponsored) {
-      setSponsoredCount(sponsoredCount + 1);
-    }
-    
-    // First transaction achievement
-    if (newTransactionCount === 1 && onAchievementUnlock) {
-      onAchievementUnlock('first_transaction');
-      await sendNotification({
-        title: "First Transaction! 💸",
-        body: "You&apos;ve successfully sent your first transaction on Base!"
+      setSponsoredCount(prev => {
+        const newSponsoredCount = prev + 1;
+        // Sponsored transaction achievement
+        if (newSponsoredCount === 1 && onAchievementUnlock) {
+          onAchievementUnlock('sponsored_transaction');
+          sendNotification({
+            title: "Sponsored Transaction! ⛽",
+            body: "Amazing! Your transaction was completely gas-free thanks to Paymaster!"
+          });
+        }
+        return newSponsoredCount;
       });
     }
     
-    // Sponsored transaction achievement
-    if (isSponsored && sponsoredCount === 0 && onAchievementUnlock) {
-      onAchievementUnlock('sponsored_transaction');
-      await sendNotification({
-        title: "Sponsored Transaction! ⛽",
-        body: "Amazing! Your transaction was completely gas-free thanks to Paymaster!"
-      });
-    }
-    
-    // Move tutorial forward
-    if (tutorialStep < tutorialSteps.length - 1) {
-      setTutorialStep(tutorialStep + 1);
-    }
-  }, [transactionCount, sponsoredCount, onAchievementUnlock, sendNotification, tutorialStep]);
+    // Move tutorial forward (3 steps total)
+    setTutorialStep(prev => prev < 2 ? prev + 1 : prev);
+  }, [onAchievementUnlock, sendNotification]);
 
   const handleTransactionStatus = useCallback((status: LifecycleStatus) => {
     console.log('Transaction status:', status);

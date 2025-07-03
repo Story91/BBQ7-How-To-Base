@@ -1,6 +1,6 @@
 "use client";
-import { cn, pressable } from "@coinbase/onchainkit/theme";
-import { useState } from "react";
+import { cn, color, pressable, text } from "@coinbase/onchainkit/theme";
+import { useEffect, useState } from "react";
 import {
   useAccount,
   useChainId,
@@ -38,7 +38,7 @@ export default function Subscribe() {
   const connectors = useConnectors();
   const sendNotification = useNotification();
 
-  const { error, isLoading, refetch } = useQuery({
+  const { data, error, isLoading, refetch } = useQuery({
     queryKey: ["collectSubscription"],
     queryFn: handleCollectSubscription,
     refetchOnWindowFocus: false,
@@ -146,37 +146,44 @@ export default function Subscribe() {
   }
 
   async function handleCollectSubscription() {
-    if (!spendPermission || !signature) {
-      throw new Error("No spend permission available");
-    }
-
-    const response = await fetch("/api/collect-subscription", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        spendPermission,
-        signature,
-        amount: parseUnits("1", 6).toString(), // 1 USDC
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to collect subscription");
-    }
-
-    const result = await response.json();
-    if (result.transactionHash) {
-      setTransactions(prev => [...prev, result.transactionHash]);
-      
-      await sendNotification({
-        title: "Subscription Collected! 💰",
-        body: `Transaction: ${result.transactionHash.slice(0, 10)}...`
+    setIsDisabled(true);
+    let data;
+    try {
+      const replacer = (key: string, value: any) => {
+        if (typeof value === "bigint") {
+          return value.toString();
+        }
+        return value;
+      };
+      const response = await fetch("/api/collect-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(
+          {
+            spendPermission,
+            signature,
+            dummyData: Math.ceil(Math.random() * 100),
+          },
+          replacer
+        ),
       });
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      data = await response.json();
+    } catch (e) {
+      console.error(e);
     }
-    return result;
+    setIsDisabled(false);
+    return data;
   }
+
+  useEffect(() => {
+    if (!data) return;
+    setTransactions([data?.transactionHash, ...transactions]);
+  }, [data]);
 
   return (
     <div className="p-4 bg-black/20 backdrop-blur-lg rounded-xl border border-blue-500/30">

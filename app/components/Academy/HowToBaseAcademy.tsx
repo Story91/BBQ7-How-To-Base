@@ -66,8 +66,9 @@ export function HowToBaseAcademy({ className = "", setActiveTab, onBack }: HowTo
     {
       id: 'identity' as TutorialTab,
       name: 'Identity',
-      icon: '🏷️',
-      description: 'Basenames & profiles'
+      icon: '🔒',
+      description: 'Coming Soon - Basenames',
+      disabled: true
     },
     {
       id: 'defi' as TutorialTab,
@@ -126,9 +127,12 @@ export function HowToBaseAcademy({ className = "", setActiveTab, onBack }: HowTo
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTutorialTab(tab.id)}
+              onClick={() => !tab.disabled && setActiveTutorialTab(tab.id)}
+              disabled={tab.disabled}
               className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all min-w-[80px] h-[80px] ${
-                activeTutorialTab === tab.id
+                tab.disabled 
+                  ? 'bg-gray-800/50 text-gray-500 cursor-not-allowed border border-gray-700/30'
+                  : activeTutorialTab === tab.id
                   ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-2xl scale-110 shadow-blue-500/30'
                   : 'bg-black/20 backdrop-blur-lg text-blue-200 hover:bg-black/30 hover:scale-105 border border-blue-500/20'
               }`}
@@ -181,10 +185,18 @@ export function HowToBaseAcademy({ className = "", setActiveTab, onBack }: HowTo
           )}
           
           {activeTutorialTab === 'identity' && (
-            <BasenamesTutorial 
-              onAchievementUnlock={handleAchievementUnlock}
-              className="animate-fadeIn" 
-            />
+            <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl p-8 border border-[var(--app-card-border)] text-center">
+              <div className="text-6xl mb-4">🔒</div>
+              <h3 className="text-2xl font-bold text-[var(--app-foreground)] mb-4">
+                Basenames & Identity
+              </h3>
+              <p className="text-[var(--app-foreground-muted)] mb-6">
+                Learn about Base identity system, ENS names, and profile management
+              </p>
+              <div className="px-4 py-2 bg-gray-600 text-white rounded-lg inline-block">
+                Coming Soon
+              </div>
+            </div>
           )}
           
           {activeTutorialTab === 'defi' && (
